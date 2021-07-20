@@ -1,0 +1,190 @@
+####Kraken2 custom DB####
+
+###Part 1: include all complete genomes in reference DB
+#copy all .fna files containing complete into new folder
+	cp `grep -lir 'complete' /scratch/groups/btc-metagenomics/data/lactoB/data/fasta/*.fna` /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+
+#remove 'contig' and 'Contig'
+	grep -l "contig" *.fna | xargs rm
+	grep -l "Contig" *.fna | xargs rm
+
+
+#check all lactonames (lac) (run with sbatch -p shared lac.sh, check with squeue -u k20108382)
+
+	#!/bin/sh
+	#SBATCH --job-name lac.sh
+	#SBATCH -o  /scratch/groups/btc-metagenomics/data/lactoB/script/lac.stdout
+	#SBATCH -e  /scratch/groups/btc-metagenomics/data/lactoB/script/lac.stderr
+	#SBATCH --mem 1G
+	#SBATCH --time=3-00:00
+	WDIR=/scratch/groups/btc-metagenomics/data/lactoB/data
+	FDIR=$WDIR/fasta
+	rm -f $WDIR/Lactob_with_filename.tsv
+	for file in $(ls $FDIR/*fna)
+	do
+		bn=$(basename $file)
+		grep ">" $file > tmp
+		awk -v bn=$bn '{print bn"\t"$0}' tmp >> /scratch/groups/btc-metagenomics/data/lactoB/scripts/Lactob_with_filename.tsv
+	done
+	
+# add some files manually
+GCF_016804305.1_ASM1680430v1_genomic.fna
+GCF_900070175.1_Lactobacillus_rhamnosus_CECT_8800_genomic.fna
+GCA_002072085.1_ASM207208v1_genomic.fna /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+GCA_003045665.1_ASM304566v1_genomic.fna /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+GCA_003045645.1_ASM304564v1_genomic.fna
+GCA_003045685.1_ASM304568v1_genomic.fna
+GCA_003045705.1_ASM304570v1_genomic.fna
+GCA_003045725.1_ASM304572v1_genomic.fna
+GCA_004208815.1_ASM420881v1_genomic.fna
+GCA_005341425.1_ASM534142v1_genomic.fna
+GCA_007954545.1_ASM795454v1_genomic.fna
+GCA_009184845.1_ASM918484v1_genomic.fna
+GCA_009295845.1_ASM929584v1_genomic.fna
+GCA_009295865.1_ASM929586v1_genomic.fna
+
+cp /scratch/groups/btc-metagenomics/data/lactoB/data/fasta/{GCA_009429065.1_ASM942906v1_genomic.fna,GCA_009497035.1_ASM949703v1_genomic.fna,GCA_009556455.1_ASM955645v1_genomic.fna} /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+cp /scratch/groups/btc-metagenomics/data/lactoB/data/fasta/{GCA_009707745.1_ASM970774v1_genomic.fna,GCA_009734365.1_ASM973436v1_genomic.fna,GCA_012275185.1_ASM1227518v1_genomic.fna,GCA_013113695.1_ASM1311369v1_genomic.fna,GCA_014898655.1_ASM1489865v1_genomic.fna} /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+cp /scratch/groups/btc-metagenomics/data/lactoB/data/fasta/{GCA_015689055.1_ASM1568905v1_genomic.fna,GCA_016697045.1_ASM1669704v1_genomic.fna,GCA_016406245.1_ASM1640624v1_genomic.fna,GCA_016804305.1_ASM1680430v1_genomic.fna,GCF_001590655.1_ASM159065v1_genomic.fna,GCF_001854105.1_ASM185410v1_genomic.fna} /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+cp /scratch/groups/btc-metagenomics/data/lactoB/data/fasta/{GCF_005341425.1_ASM534142v1_genomic.fna,GCF_007954545.1_ASM795454v1_genomic.fna,GCF_009184845.1_ASM918484v1_genomic.fna,GCF_009295845.1_ASM929584v1_genomic.fna,GCF_009295865.1_ASM929586v1_genomic.fna} /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+cp /scratch/groups/btc-metagenomics/data/lactoB/data/fasta/{GCF_009429065.1_ASM942906v1_genomic.fna,GCF_009556455.1_ASM955645v1_genomic.fna} /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+cp /scratch/groups/btc-metagenomics/data/lactoB/data/fasta/{GCF_009707745.1_ASM970774v1_genomic.fna,GCF_009734365.1_ASM973436v1_genomic.fna,GCF_013113695.1_ASM1311369v1_genomic.fna,GCF_013394085.1_ASM1339408v1_genomic.fna,GCF_014898655.1_ASM1489865v1_genomic.fna} /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+cp /scratch/groups/btc-metagenomics/data/lactoB/data/fasta/{GCF_015689055.1_ASM1568905v1_genomic.fna,GCF_016406245.1_ASM1640624v1_genomic.fna,GCF_016697045.1_ASM1669704v1_genomic.fna,GCF_016804305.1_ASM1680430v1_genomic.fna} /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes
+
+###Part 2: create reference DB
+#conda commands
+	conda create -n blast
+	conda activate blast
+	conda install -c bioconda blast 
+	
+#first: to submit job activate conda with 'conda activate blast'
+
+#activate modules
+	module add utilities/use.dev
+	module add apps/blast+/2.11.0
+	module load apps/kraken2/2.0.8-beta 
+
+#second: download taxonomy 
+	kraken2-build --download-taxonomy --db /scratch/groups/btc-metagenomics/data/lactoB/data/DBkraken
+
+#third: add .fna files to library with bash script DBkraken.sh
+
+	#!/bin/sh
+	#SBATCH --job-name refdb.sh
+	#SBATCH -o  /scratch/groups/btc-metagenomics/data/lactoB/script/refdb.stdout
+	#SBATCH -e  /scratch/groups/btc-metagenomics/data/lactoB/script/refdb.stderr
+	#SBATCH --mem 1G
+	#SBATCH --time=3-00:00
+
+	module add utilities/use.dev
+	module add apps/blast+/2.11.0
+	module load apps/kraken2/2.0.8-beta
+
+	for file in /scratch/groups/btc-metagenomics/data/lactoB/data/completegenomes/*.fna
+	do   
+	 	kraken2-build --add-to-library $file --db /scratch/groups/btc-metagenomics/data/lactoB/data/DBkraken
+	done
+	
+#fourth: build database 
+	kraken2-build --build --threads 8 --db /scratch/groups/btc-metagenomics/data/lactoB/data/DBkraken	
+	
+#last: inspect the database
+	kraken2-inspect --db /scratch/groups/btc-metagenomics/data/lactoB/data/DBkraken | head -5
+
+
+###Part 3: call HLI taxa
+#test bash
+	#!/bin/sh
+	for id in $(cut -f 9 /scratch/groups/btc-metagenomics/data/HLI/touse/selected.tsv)
+	do
+	file=/scratch/groups/btc-metagenomics/data/HLI/cleaned/${id}_clean.fq.gz
+	ls $file >> /scratch/groups/btc-metagenomics/data/lactoB/data/rawcalls/selectedfiles.txt
+	done
+	
+		 
+
+ #kraken2.sh in /scratch/groups/btc-metagenomics/data/lactoB/scripts (run with sbatch -p brc kraken2.sh)
+		 
+ #!/bin/sh
+ #SBATCH --job-name kraken2.sh
+ #SBATCH -o  /scratch/groups/btc-metagenomics/data/lactoB/scripts/kraken2/kraken2-%j.stdout
+ #SBATCH -e  /scratch/groups/btc-metagenomics/data/lactoB/scripts/kraken2/kraken2-%j.stderr
+ #SBATCH --mem 10G
+ #SBATCH --time=3-00:00
+ #SBATCH --array=1-1005
+
+  # -----------
+  # LOADs MODULES
+  # -----------
+
+ module add utilities/use.dev
+ module add apps/blast+/2.11.0
+ module load apps/kraken2/2.0.8-beta
+
+ # -----------
+ # SETs FOLDERS and FILES
+ # -----------
+
+ DB=/scratch/groups/btc-metagenomics/data/lactoB/data/DBkraken
+ OUTDIR=/scratch/groups/btc-metagenomics/data/lactoB/data/kraken_call
+ FDIR=/scratch/groups/btc-metagenomics//data/HLI/cleaned
+
+ # Populate the array from the output of a bash command
+ ids=( $( cut -f 9 /scratch/groups/btc-metagenomics/data/HLI/touse/selected.tsv ) )
+
+ # -----------
+ # RUNs
+ # -----------
+
+ #This is the file that will be analysed at this run
+ myfile=$FDIR/${ids[$SLURM_ARRAY_TASK_ID]}_clean.fq.gz
+
+ #stdout file
+ echo "Analysing now: " $myfile
+
+ #calling
+ kraken2 --db $DB $myfile --output $OUTDIR/${ids[$SLURM_ARRAY_TASK_ID]}.kraken --report $OUTDIR/${ids[$SLURM_ARRAY_TASK_ID]}.report
+ 
+ 
+ #######Bracken for abundances
+ 
+ module load apps/bracken/2.6.0 
+ 
+ bracken-build -d ${KRAKEN_DB} -t ${THREADS} -k ${KMER_LEN} -l ${READ_LEN} -x ${KRAKEN_INSTALLATION}
+ bracken-build -d /scratch/groups/btc-metagenomics/data/lactoB/data/DBkraken -t 8 -k 35 -l 125
+ 
+ 
+ bracken -d MY_DB -i INPUT -o OUTPUT -w OUTREPORT -r READ_LEN -l LEVEL -t THRESHOLD
+ bracken -d $DB -i $file -o $OUTDIR/${file}.report -r 125 -l S 
+ 
+
+
+#relative abundances with bracken.sh in /scratch/groups/btc-metagenomics/data/lactoB/scripts
+ 
+ 
+#!/bin/sh
+  
+# -----------
+# LOADs MODULES
+# -----------
+ 
+module load apps/kraken2/2.0.8-beta 
+module load apps/bracken/2.6.0 
+  
+# -----------
+# SETs FOLDERS and FILES
+# -----------
+  
+DB=/scratch/groups/btc-metagenomics/data/lactoB/data/DBkraken
+FDIR=/scratch/groups/btc-metagenomics/data/lactoB/data/kraken_call
+OUTDIR=/scratch/groups/btc-metagenomics/data/lactoB/data/kraken_call/bracken/bracken_genus
+READ_LEN=125
+
+  
+for i in $(find -L /scratch/groups/btc-metagenomics/data/lactoB/data/kraken_call/reportfiles -name "*.report" -type f)
+do 
+FILENAME=$(basename "$i")
+SAMPLE=${FILENAME%.report}
+
+  bracken -d $DB -i $i -o $OUTDIR/${SAMPLE}.bracken -r $READ_LEN -l G
+done
